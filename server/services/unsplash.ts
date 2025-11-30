@@ -18,7 +18,7 @@ function extractKeywords(prompt: string): string {
     .split(/\s+/)
     .filter((word) => word.length > 2 && !stopWords.has(word));
 
-  const uniqueWords = [...new Set(words)];
+  const uniqueWords = Array.from(new Set(words));
   return uniqueWords.slice(0, 3).join(" ");
 }
 
