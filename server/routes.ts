@@ -1,16 +1,33 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { generateMoodboardRequestSchema } from "@shared/schema";
+import { generateMoodboard } from "./services/unsplash";
+import { fromError } from "zod-validation-error";
 
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
-  // put application routes here
-  // prefix all routes with /api
+  app.post("/api/generate", async (req, res) => {
+    try {
+      const parsed = generateMoodboardRequestSchema.safeParse(req.body);
+      
+      if (!parsed.success) {
+        const error = fromError(parsed.error);
+        return res.status(400).json({ error: error.message });
+      }
 
-  // use storage to perform CRUD operations on the storage interface
-  // e.g. storage.insertUser(user) or storage.getUserByUsername(username)
+      const { prompt } = parsed.data;
+      const result = await generateMoodboard(prompt);
+      
+      return res.json(result);
+    } catch (error) {
+      console.error("Error generating moodboard:", error);
+      return res.status(500).json({ 
+        error: "Failed to generate moodboard. Please try again." 
+      });
+    }
+  });
 
   return httpServer;
 }
